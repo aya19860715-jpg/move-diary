@@ -23,6 +23,12 @@ input,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);border-ra
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
 .chip{border:1px solid var(--ln);background:var(--bg);color:var(--tx);border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;cursor:pointer}
 .chip.on{color:#fff;border-color:transparent}
+.chip.ed{display:inline-flex;align-items:center;gap:4px;padding:4px 6px 4px 12px}
+.chip.ed input{width:7em;border:0;background:transparent;padding:2px;font-size:13px;color:var(--tx)}
+.chip.ed button{border:0;background:none;color:var(--mu);cursor:pointer;font-size:14px;padding:0 4px}
+.addrow{display:flex;gap:8px;margin:-4px 0 10px}.addrow input{flex:1;font-size:14px;padding:8px 12px}
+.addrow button{border:1px solid var(--ln);background:var(--bg);color:var(--tx);border-radius:12px;padding:0 14px;font:inherit;font-size:13px;cursor:pointer}
+.lnk{border:0;background:none;color:var(--mu);font:inherit;font-size:12px;cursor:pointer;padding:0;text-decoration:underline;margin:0 0 12px}
 .btn{width:100%;border:0;border-radius:14px;padding:13px;background:var(--ac);color:#fff;font:inherit;font-size:15px;cursor:pointer;margin-top:12px}
 .ringwrap{display:flex;align-items:center;gap:18px}
 .ring{position:relative;width:128px;height:128px;flex:none}
@@ -67,6 +73,8 @@ input,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);border-ra
 <div class="row"><div><label>日付</label><input type="date" id="fd"></div><div><label>歩数</label><input type="number" id="fs" inputmode="numeric" placeholder="例 8000"></div><div><label>体重 (kg)</label><input type="number" id="fw" step="0.1" inputmode="decimal" placeholder="例 52.5"></div></div>
 <label style="margin-top:12px">今日の運動</label>
 <div class="chips" id="chips"></div>
+<div class="addrow"><input id="nt" placeholder="運動を追加(例 ポールエクササイズ)" maxlength="20"><button id="na" type="button">追加</button></div>
+<button class="lnk" id="et" type="button">名前の変更・削除</button>
 <div class="row"><div><label>運動時間 (分)</label><input type="number" id="fm" inputmode="numeric" placeholder="例 60"></div></div>
 <label style="margin-top:12px">ひとことメモ</label>
 <textarea id="fn" rows="2" placeholder="今日の気分、頑張ったこと"></textarea>
@@ -91,9 +99,11 @@ input,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);border-ra
 <p class="note">記録はこの端末のブラウザに保存されます。</p>
 </main>
 <script>
-var TYPES=[["ピラティス","var(--lav)"],["パーソナルジム","var(--rose)"],["ランニング","var(--blu)"],["ウォーキング","var(--sage)"],["その他","var(--sand)"]];
-var S={p:{h:"",tw:"",g:8000},d:{}},mem=null,sel=[],vm=new Date();
-function load(){try{var r=localStorage.getItem("mmd1");if(r)S=JSON.parse(r)}catch(e){if(mem)S=mem}}
+var PAL=["var(--lav)","var(--rose)","var(--blu)","var(--sage)","var(--sand)","#e8c4a8","#a8c8c0","#c9a9b8"],ED=false;
+function defT(){return [{n:"ピラティス",c:0},{n:"パーソナルジム",c:1},{n:"ランニング",c:2},{n:"ウォーキング",c:3},{n:"その他",c:4}]}
+function col(n){var t=S.types.filter(function(x){return x.n===n})[0];return t?PAL[t.c%PAL.length]:"var(--sand)"}
+var S={p:{h:"",tw:"",g:8000},d:{},types:null},mem=null,sel=[],vm=new Date();
+function load(){try{var r=localStorage.getItem("mmd1");if(r)S=JSON.parse(r)}catch(e){if(mem)S=mem}if(!S.types)S.types=defT()}
 function save(){mem=S;try{localStorage.setItem("mmd1",JSON.stringify(S))}catch(e){}}
 function ks(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
 var $=function(i){return document.getElementById(i)},TD=ks(new Date());
@@ -102,8 +112,13 @@ function streak(){var d=new Date();if(!rec(ks(d)))d.setDate(d.getDate()-1);var n
 function weights(){return Object.keys(S.d).sort().filter(function(k){return S.d[k].w>0})}
 function fmt(n){return Number(n).toLocaleString("ja-JP")}
 function fill(k){var x=S.d[k]||{};$("fs").value=x.s||"";$("fw").value=x.w||"";$("fm").value=x.m||"";$("fn").value=x.n||"";sel=(x.e||[]).slice();chips()}
-function chips(){$("chips").innerHTML=TYPES.map(function(t){var on=sel.indexOf(t[0])>-1;return '<button class="chip'+(on?" on":"")+'" style="'+(on?"background:"+t[1]:"")+'" data-t="'+t[0]+'">'+t[0]+'</button>'}).join("");
-document.querySelectorAll(".chip").forEach(function(b){b.onclick=function(){var t=b.dataset.t,i=sel.indexOf(t);if(i>-1)sel.splice(i,1);else sel.push(t);chips()}})}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;")}
+function chips(){var c=$("chips");$("et").textContent=ED?"編集を終わる":"名前の変更・削除";
+if(ED){c.innerHTML=S.types.map(function(t,i){return '<span class="chip ed"><input value="'+esc(t.n)+'" data-i="'+i+'" maxlength="20"><button type="button" data-d="'+i+'">✕</button></span>'}).join("");
+c.querySelectorAll("input").forEach(function(el){el.onchange=function(){var i=+el.dataset.i,o=S.types[i].n,n=el.value.trim();if(!n||S.types.some(function(x,j){return j!==i&&x.n===n})){el.value=o;return}S.types[i].n=n;Object.keys(S.d).forEach(function(k){var e=S.d[k].e;if(e)S.d[k].e=e.map(function(x){return x===o?n:x})});sel=sel.map(function(x){return x===o?n:x});save();render()}});
+c.querySelectorAll("button").forEach(function(b){b.onclick=function(){var i=+b.dataset.d,o=S.types[i].n;S.types.splice(i,1);sel=sel.filter(function(x){return x!==o});save();chips()}});return}
+c.innerHTML=S.types.map(function(t){var on=sel.indexOf(t.n)>-1;return '<button type="button" class="chip'+(on?" on":"")+'" style="'+(on?"background:"+PAL[t.c%PAL.length]:"")+'" data-t="'+esc(t.n)+'">'+esc(t.n)+'</button>'}).join("");
+c.querySelectorAll(".chip").forEach(function(b){b.onclick=function(){var t=b.dataset.t,i=sel.indexOf(t);if(i>-1)sel.splice(i,1);else sel.push(t);chips()}})}
 function render(){
 var g=+S.p.g||8000,t=S.d[TD]||{},s=t.s||0,pr=Math.min(s/g,1);
 $("today").textContent=new Date().toLocaleDateString("ja-JP",{year:"numeric",month:"long",day:"numeric",weekday:"short"});
@@ -121,7 +136,7 @@ $("msg").textContent=st>=3?st+"日連続で記録中。すばらしい習慣で�
 function cal(){var y=vm.getFullYear(),m=vm.getMonth(),f=new Date(y,m,1).getDay(),n=new Date(y,m+1,0).getDate(),g=+S.p.g||8000;
 $("mt").textContent=y+"年"+(m+1)+"月";var h=["日","月","火","水","木","金","土"].map(function(x){return '<div class="h">'+x+'</div>'}).join("");
 for(var i=0;i<f;i++)h+="<div></div>";
-for(var d=1;d<=n;d++){var k=y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"),x=S.d[k]||{},dots=(x.e||[]).map(function(e){var c=TYPES.filter(function(t){return t[0]===e})[0];return '<u style="background:'+(c?c[1]:"var(--sand)")+'"></u>'}).join("");
+for(var d=1;d<=n;d++){var k=y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"),x=S.d[k]||{},dots=(x.e||[]).map(function(e){return '<u style="background:'+col(e)+'"></u>'}).join("");
 h+='<div class="cell'+(x.s>=g?" goal":"")+(k===TD?" today":"")+'" data-k="'+k+'">'+d+'<span class="dots">'+dots+'</span></div>'}
 $("cal").innerHTML=h;document.querySelectorAll(".cell").forEach(function(c){c.onclick=function(){$("fd").value=c.dataset.k;fill(c.dataset.k);$("fd").scrollIntoView({behavior:"smooth",block:"center"})}})}
 function badges(st,mc,s){var all=Object.keys(S.d).map(function(k){return S.d[k]}),mxs=Math.max.apply(null,[0].concat(all.map(function(x){return x.s||0})));
@@ -131,6 +146,9 @@ function cnt(t){return Object.keys(S.d).filter(function(k){return (S.d[k].e||[])
 function maxStreak(){var ks2=Object.keys(S.d).filter(rec).sort(),b=0,c=0,p=null;ks2.forEach(function(k){var d=new Date(k+"T00:00:00");if(p&&(d-p)===864e5)c++;else c=1;p=d;if(c>b)b=c});return b}
 $("save").onclick=function(){var k=$("fd").value||TD;S.d[k]={s:+$("fs").value||0,w:+$("fw").value||0,m:+$("fm").value||0,n:$("fn").value,e:sel.slice()};save();render();var b=$("save");b.textContent="記録しました ✓";setTimeout(function(){b.textContent="記録する"},1500)};
 $("fd").onchange=function(){fill($("fd").value)};
+$("na").onclick=function(){var v=$("nt").value.trim();if(!v)return;if(!S.types.some(function(x){return x.n===v})){var m=-1;S.types.forEach(function(x){if(x.c>m)m=x.c});S.types.push({n:v,c:(m+1)%PAL.length})}if(sel.indexOf(v)<0)sel.push(v);$("nt").value="";save();chips()};
+$("et").onclick=function(){ED=!ED;chips()};
+$("nt").onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();$("na").onclick()}};
 ["ph","pt","pg"].forEach(function(i){$(i).oninput=function(){S.p[i==="ph"?"h":i==="pt"?"tw":"g"]=$(i).value;save();render()}});
 $("pm").onclick=function(){vm.setMonth(vm.getMonth()-1);cal()};$("nm").onclick=function(){vm.setMonth(vm.getMonth()+1);cal()};
 load();$("fd").value=TD;fill(TD);$("ph").value=S.p.h;$("pt").value=S.p.tw;$("pg").value=S.p.g;render();
