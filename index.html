@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>My Move Diary</title>
+<style>
+:root{--bg:#f6f1ee;--card:#fffaf7;--tx:#5a5050;--mu:#9a8f8c;--ln:#eadfd9;--sage:#a9c1b0;--rose:#e3b5b5;--lav:#c6bfdc;--sand:#e6d3b8;--blu:#b7cbdc;--ac:#c99a9a;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#2a2628;--card:#352f31;--tx:#eee5e2;--mu:#b0a5a2;--ln:#4a4144;--sage:#84a08d;--rose:#c28f8f;--lav:#9d95bd;--sand:#bfa888;--blu:#8aa5bc;--ac:#d9a9a9}}
+:root[data-theme="dark"]{--bg:#2a2628;--card:#352f31;--tx:#eee5e2;--mu:#b0a5a2;--ln:#4a4144;--sage:#84a08d;--rose:#c28f8f;--lav:#9d95bd;--sand:#bfa888;--blu:#8aa5bc;--ac:#d9a9a9}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:"Hiragino Sans","Yu Gothic",Meiryo,sans-serif;line-height:1.6}
+main{max-width:640px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:22px;margin:8px 0 2px;letter-spacing:.08em;font-weight:600}
+.sub{color:var(--mu);font-size:13px;margin:0 0 16px}
+.msg{background:linear-gradient(135deg,var(--rose),var(--lav));color:#fff;border-radius:20px;padding:16px 18px;font-size:15px;margin-bottom:14px}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:20px;padding:18px;margin-bottom:14px}
+h2{font-size:14px;margin:0 0 12px;color:var(--mu);font-weight:600;letter-spacing:.1em}
+.row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1 1 120px}
+label{display:block;font-size:12px;color:var(--mu);margin-bottom:4px}
+input,textarea{width:100%;padding:10px 12px;border:1px solid var(--ln);border-radius:12px;background:var(--bg);color:var(--tx);font:inherit;font-size:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:4px 0 12px}
+.chip{border:1px solid var(--ln);background:var(--bg);color:var(--tx);border-radius:999px;padding:7px 14px;font:inherit;font-size:13px;cursor:pointer}
+.chip.on{color:#fff;border-color:transparent}
+.btn{width:100%;border:0;border-radius:14px;padding:13px;background:var(--ac);color:#fff;font:inherit;font-size:15px;cursor:pointer;margin-top:12px}
+.ringwrap{display:flex;align-items:center;gap:18px}
+.ring{position:relative;width:128px;height:128px;flex:none}
+.ring b{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;font-weight:600}
+.ring b small{font-size:11px;color:var(--mu);font-weight:400}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.st{background:var(--bg);border-radius:14px;padding:12px}
+.st span{font-size:11px;color:var(--mu);display:block}.st strong{font-size:20px;font-weight:600}
+.bars{display:flex;align-items:flex-end;gap:8px;height:120px}
+.bar{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;font-size:10px;color:var(--mu)}
+.bar i{display:block;width:100%;border-radius:8px 8px 4px 4px;background:var(--sage);min-height:3px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center;font-size:12px}
+.cal .h{color:var(--mu);font-size:10px}
+.cell{aspect-ratio:1;border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--bg);cursor:pointer;border:1.5px solid transparent}
+.cell.goal{background:color-mix(in srgb,var(--sage) 45%,var(--bg))}
+.cell.today{border-color:var(--ac)}
+.dots{display:flex;gap:2px;height:6px}.dots u{width:5px;height:5px;border-radius:50%}
+.nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-size:14px}
+.nav button{border:0;background:none;color:var(--tx);font-size:20px;cursor:pointer;padding:0 10px}
+.badges{display:flex;flex-wrap:wrap;gap:8px}
+.bd{padding:6px 12px;border-radius:999px;font-size:12px;background:var(--bg);color:var(--mu);border:1px dashed var(--ln)}
+.bd.on{background:var(--sand);color:#fff;border:1px solid transparent}
+.note{font-size:11px;color:var(--mu);text-align:center;margin-top:20px}
+</style>
+</head>
+<body>
+<main>
+<h1>My Move Diary</h1>
+<p class="sub" id="today"></p>
+<div class="msg" id="msg"></div>
+
+<div class="card">
+<h2>TODAY</h2>
+<div class="ringwrap">
+<div class="ring"><svg width="128" height="128" viewBox="0 0 128 128"><circle cx="64" cy="64" r="54" fill="none" stroke="var(--ln)" stroke-width="12"/><circle id="arc" cx="64" cy="64" r="54" fill="none" stroke="var(--sage)" stroke-width="12" stroke-linecap="round" stroke-dasharray="339.3" stroke-dashoffset="339.3" transform="rotate(-90 64 64)"/></svg><b><span id="rs">0</span><small id="rg">/ 8,000歩</small></b></div>
+<div id="rt" style="font-size:14px"></div>
+</div>
+</div>
+
+<div class="card">
+<h2>RECORD</h2>
+<div class="row"><div><label>日付</label><input type="date" id="fd"></div><div><label>歩数</label><input type="number" id="fs" inputmode="numeric" placeholder="例 8000"></div><div><label>体重 (kg)</label><input type="number" id="fw" step="0.1" inputmode="decimal" placeholder="例 52.5"></div></div>
+<label style="margin-top:12px">今日の運動</label>
+<div class="chips" id="chips"></div>
+<div class="row"><div><label>運動時間 (分)</label><input type="number" id="fm" inputmode="numeric" placeholder="例 60"></div></div>
+<label style="margin-top:12px">ひとことメモ</label>
+<textarea id="fn" rows="2" placeholder="今日の気分、頑張ったこと"></textarea>
+<button class="btn" id="save">記録する</button>
+</div>
+
+<div class="card">
+<h2>MY DATA</h2>
+<div class="stats" id="stats"></div>
+<div class="row" style="margin-top:14px"><div><label>身長 (cm)</label><input type="number" id="ph" step="0.1" inputmode="decimal"></div><div><label>目標体重 (kg)</label><input type="number" id="pt" step="0.1" inputmode="decimal"></div><div><label>歩数の目標</label><input type="number" id="pg" inputmode="numeric"></div></div>
+</div>
+
+<div class="card"><h2>THIS WEEK</h2><div class="bars" id="bars"></div></div>
+
+<div class="card"><h2>CALENDAR</h2>
+<div class="nav"><button id="pm">‹</button><span id="mt"></span><button id="nm">›</button></div>
+<div class="cal" id="cal"></div>
+<p style="font-size:11px;color:var(--mu);margin:10px 0 0">背景が色づく日は歩数の目標達成。点は運動の種類です。</p>
+</div>
+
+<div class="card"><h2>BADGES</h2><div class="badges" id="badges"></div></div>
+<p class="note">記録はこの端末のブラウザに保存されます。</p>
+</main>
+<script>
+var TYPES=[["ピラティス","var(--lav)"],["パーソナルジム","var(--rose)"],["ランニング","var(--blu)"],["ウォーキング","var(--sage)"],["その他","var(--sand)"]];
+var S={p:{h:"",tw:"",g:8000},d:{}},mem=null,sel=[],vm=new Date();
+function load(){try{var r=localStorage.getItem("mmd1");if(r)S=JSON.parse(r)}catch(e){if(mem)S=mem}}
+function save(){mem=S;try{localStorage.setItem("mmd1",JSON.stringify(S))}catch(e){}}
+function ks(d){return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
+var $=function(i){return document.getElementById(i)},TD=ks(new Date());
+function rec(k){var x=S.d[k];return x&&(x.s>0||(x.e&&x.e.length))}
+function streak(){var d=new Date();if(!rec(ks(d)))d.setDate(d.getDate()-1);var n=0;while(rec(ks(d))){n++;d.setDate(d.getDate()-1)}return n}
+function weights(){return Object.keys(S.d).sort().filter(function(k){return S.d[k].w>0})}
+function fmt(n){return Number(n).toLocaleString("ja-JP")}
+function fill(k){var x=S.d[k]||{};$("fs").value=x.s||"";$("fw").value=x.w||"";$("fm").value=x.m||"";$("fn").value=x.n||"";sel=(x.e||[]).slice();chips()}
+function chips(){$("chips").innerHTML=TYPES.map(function(t){var on=sel.indexOf(t[0])>-1;return '<button class="chip'+(on?" on":"")+'" style="'+(on?"background:"+t[1]:"")+'" data-t="'+t[0]+'">'+t[0]+'</button>'}).join("");
+document.querySelectorAll(".chip").forEach(function(b){b.onclick=function(){var t=b.dataset.t,i=sel.indexOf(t);if(i>-1)sel.splice(i,1);else sel.push(t);chips()}})}
+function render(){
+var g=+S.p.g||8000,t=S.d[TD]||{},s=t.s||0,pr=Math.min(s/g,1);
+$("today").textContent=new Date().toLocaleDateString("ja-JP",{year:"numeric",month:"long",day:"numeric",weekday:"short"});
+$("arc").style.strokeDashoffset=339.3*(1-pr);$("rs").textContent=fmt(s);$("rg").textContent="/ "+fmt(g)+"歩";
+$("rt").innerHTML=s>=g?"目標達成。すてきな一日でした。":(s>0?"あと <b>"+fmt(g-s)+"</b> 歩":"今日の歩数を記録しましょう")+(t.e&&t.e.length?"<br><span style='color:var(--mu)'>"+t.e.join("・")+"</span>":"");
+var st=streak(),ws=weights(),h=+S.p.h,lw=ws.length?S.d[ws[ws.length-1]].w:0,fw=ws.length?S.d[ws[0]].w:0,bmi=h&&lw?(lw/Math.pow(h/100,2)).toFixed(1):"-";
+var ym=ks(new Date()).slice(0,7),mc=Object.keys(S.d).filter(function(k){return k.slice(0,7)===ym&&S.d[k].e&&S.d[k].e.length}).length;
+var diff=ws.length>1?(lw-fw).toFixed(1):"-";
+$("stats").innerHTML=[["連続記録",st+"日"],["今月の運動",mc+"回"],["最新の体重",lw?lw+" kg":"-"],["BMI",bmi],["開始からの変化",diff==="-"?"-":(diff>0?"+":"")+diff+" kg"],["目標まで",S.p.tw&&lw?Math.abs(lw-S.p.tw).toFixed(1)+" kg":"-"]].map(function(a){return '<div class="st"><span>'+a[0]+'</span><strong>'+a[1]+'</strong></div>'}).join("");
+var days=[],mx=g;for(var i=6;i>=0;i--){var d=new Date();d.setDate(d.getDate()-i);var k=ks(d),v=(S.d[k]||{}).s||0;days.push([d.getDate(),v]);if(v>mx)mx=v}
+$("bars").innerHTML=days.map(function(a){return '<div class="bar">'+(a[1]?fmt(a[1]):"")+'<i style="height:'+(a[1]/mx*85)+'%;'+(a[1]>=g?"background:var(--rose)":"")+'"></i>'+a[0]+'</div>'}).join("");
+cal();badges(st,mc,s);
+var M=["今日の一歩が、未来の自分をつくります。","小さな積み重ねが、いちばん強い。","動いた自分に、ちゃんと拍手を。","ゆっくりでも、止まらなければ進んでいます。","今日も記録に来てくれてありがとう。","心地よく続けることが、いちばんの近道です。","できた日も、休んだ日も、あなたの記録です。"];
+$("msg").textContent=st>=3?st+"日連続で記録中。すばらしい習慣です。":M[new Date().getDate()%M.length]}
+function cal(){var y=vm.getFullYear(),m=vm.getMonth(),f=new Date(y,m,1).getDay(),n=new Date(y,m+1,0).getDate(),g=+S.p.g||8000;
+$("mt").textContent=y+"年"+(m+1)+"月";var h=["日","月","火","水","木","金","土"].map(function(x){return '<div class="h">'+x+'</div>'}).join("");
+for(var i=0;i<f;i++)h+="<div></div>";
+for(var d=1;d<=n;d++){var k=y+"-"+String(m+1).padStart(2,"0")+"-"+String(d).padStart(2,"0"),x=S.d[k]||{},dots=(x.e||[]).map(function(e){var c=TYPES.filter(function(t){return t[0]===e})[0];return '<u style="background:'+(c?c[1]:"var(--sand)")+'"></u>'}).join("");
+h+='<div class="cell'+(x.s>=g?" goal":"")+(k===TD?" today":"")+'" data-k="'+k+'">'+d+'<span class="dots">'+dots+'</span></div>'}
+$("cal").innerHTML=h;document.querySelectorAll(".cell").forEach(function(c){c.onclick=function(){$("fd").value=c.dataset.k;fill(c.dataset.k);$("fd").scrollIntoView({behavior:"smooth",block:"center"})}})}
+function badges(st,mc,s){var all=Object.keys(S.d).map(function(k){return S.d[k]}),mxs=Math.max.apply(null,[0].concat(all.map(function(x){return x.s||0})));
+var B=[["はじめの一歩",all.some(function(x){return x.s>0||(x.e&&x.e.length)})],["3日連続",st>=3||maxStreak()>=3],["7日連続",maxStreak()>=7],["10,000歩",mxs>=10000],["今月10回運動",mc>=10],["ピラティス3回",cnt("ピラティス")>=3],["ジム3回",cnt("パーソナルジム")>=3]];
+$("badges").innerHTML=B.map(function(b){return '<span class="bd'+(b[1]?" on":"")+'">'+b[0]+'</span>'}).join("")}
+function cnt(t){return Object.keys(S.d).filter(function(k){return (S.d[k].e||[]).indexOf(t)>-1}).length}
+function maxStreak(){var ks2=Object.keys(S.d).filter(rec).sort(),b=0,c=0,p=null;ks2.forEach(function(k){var d=new Date(k+"T00:00:00");if(p&&(d-p)===864e5)c++;else c=1;p=d;if(c>b)b=c});return b}
+$("save").onclick=function(){var k=$("fd").value||TD;S.d[k]={s:+$("fs").value||0,w:+$("fw").value||0,m:+$("fm").value||0,n:$("fn").value,e:sel.slice()};save();render();var b=$("save");b.textContent="記録しました ✓";setTimeout(function(){b.textContent="記録する"},1500)};
+$("fd").onchange=function(){fill($("fd").value)};
+["ph","pt","pg"].forEach(function(i){$(i).oninput=function(){S.p[i==="ph"?"h":i==="pt"?"tw":"g"]=$(i).value;save();render()}});
+$("pm").onclick=function(){vm.setMonth(vm.getMonth()-1);cal()};$("nm").onclick=function(){vm.setMonth(vm.getMonth()+1);cal()};
+load();$("fd").value=TD;fill(TD);$("ph").value=S.p.h;$("pt").value=S.p.tw;$("pg").value=S.p.g;render();
+</script>
+</body>
+</html>
